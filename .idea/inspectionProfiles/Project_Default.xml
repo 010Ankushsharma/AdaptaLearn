@@ -1,0 +1,32 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="INFORMATION" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="shap" />
+          <option value="gunicorn" />
+          <option value="dashboard" />
+          <option value="scikit-learn" />
+          <option value="statsmodels" />
+          <option value="tensorflow" />
+          <option value="matplotlib" />
+          <option value="pandas" />
+          <option value="numpy" />
+          <option value="requests" />
+          <option value="prophet" />
+          <option value="torch" />
+          <option value="fastapi" />
+          <option value="uvicorn" />
+          <option value="mlflow" />
+          <option value="python-dotenv" />
+          <option value="pyyaml" />
+          <option value="pytest" />
+          <option value="pydantic-settings" />
+          <option value="openpyxl" />
+          <option value="streamlit" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
