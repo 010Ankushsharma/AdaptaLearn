@@ -2,7 +2,7 @@
 ### Final Year Project — PPO / Actor-Critic + Knowledge Tracing
 
 An RL agent that acts as a personal tutor — dynamically selecting which concept
-and question to show each student next, based on their evolving knowledge state.... 
+and question to show each student next, based on their evolving knowledge state.
 
 ## Architecture
 
