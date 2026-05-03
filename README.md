@@ -8,7 +8,7 @@ and question to show each student next, based on their evolving knowledge state.
 
 ```
 Student Interface (React)
-        ↕
+        ↕ 
 Django REST API
         ↕
 PPO Agent (Stable-Baselines3)  ←→  DKVMN Knowledge Tracing (PyTorch)
