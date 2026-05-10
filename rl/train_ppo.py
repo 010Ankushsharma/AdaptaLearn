@@ -46,6 +46,18 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 
+# # Full training (500k steps, ~2-4 hours on CPU, ~30min on GPU)
+# python rl/train_ppo.py
+#
+# # Quick test (5k steps, completes in ~1 min)
+# python rl/train_ppo.py --timesteps 5000 --n-steps 256 --batch 32
+#
+# # 4 parallel envs (4× faster experience collection)
+# python rl/train_ppo.py --n-envs 4
+#
+# # Resume from checkpoint
+# python rl/train_ppo.py --resume checkpoints/ppo_best.zip
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import ENV, MLFLOW, NUM_CONCEPTS, NUM_QUESTIONS, PPO, EVAL
 from rl.actor_critic import ActorCritic, count_params, print_summary
