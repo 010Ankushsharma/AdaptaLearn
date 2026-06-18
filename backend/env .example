@@ -1,0 +1,76 @@
+# .env.example
+# ─────────────────────────────────────────────────────────────────────────────
+# Adaptive Learning System — environment variable template
+#
+# Copy this file to .env and fill in your values:
+#     cp .env.example .env
+#
+# .env is listed in .gitignore — never commit it.
+# This file (.env.example) is safe to commit — it contains no real secrets.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+# ── Django core ───────────────────────────────────────────────────────────────
+
+# Secret key used for cryptographic signing (sessions, CSRF tokens, etc.)
+# Generate a strong one with:
+#     python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+DJANGO_SECRET_KEY=django-insecure-replace-this-with-a-real-secret-key-in-production
+
+# Set to False in production — never run with True on a public server
+DJANGO_DEBUG=True
+
+# Comma-separated list of hostnames Django is allowed to serve
+# Example for production: ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Log level: DEBUG | INFO | WARNING | ERROR | CRITICAL
+DJANGO_LOG_LEVEL=INFO
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+# Leave blank to use SQLite (recommended for local development — no setup needed)
+# For PostgreSQL, use: postgres://USER:PASSWORD@HOST:5432/DBNAME
+DATABASE_URL=
+
+
+# ── Redis (used for Celery task queue and Django cache) ───────────────────────
+
+# Local Redis (install with: brew install redis  or  sudo apt install redis)
+REDIS_URL=redis://localhost:6379/0
+
+
+# ── CORS (Cross-Origin Resource Sharing) ─────────────────────────────────────
+
+# Origins allowed to make API requests from the browser
+# Development default (React dev server) is already set in settings.py
+# In production, add your deployed frontend URL:
+#     CORS_ALLOWED_ORIGINS=https://yourdomain.com
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+
+
+# ── File system paths (optional — defaults are relative to project root) ──────
+
+# Where raw downloaded datasets are stored
+# Default: <project_root>/data/raw
+DATA_DIR=
+
+# Where preprocessed parquet files are written by preprocess.py
+# Default: <project_root>/data/processed
+PROCESSED_DIR=
+
+# Where model checkpoints are saved (dkvmn_best.pt, ppo_best.zip)
+# Default: <project_root>/checkpoints
+CHECKPOINT_DIR=
+
+# Where log files are written
+# Default: <project_root>/logs
+LOG_DIR=
+
+
+# ── MLflow experiment tracking ────────────────────────────────────────────────
+
+# Local file-based tracking (default — no server needed)
+# For a remote MLflow server: MLFLOW_TRACKING_URI=http://localhost:5000
+MLFLOW_TRACKING_URI=
