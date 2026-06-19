@@ -1,0 +1,86 @@
+# render.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint — provisions everything this project needs in one file.
+#
+# Deploy with this file by:
+#   1. Push this repo to GitHub/GitLab
+#   2. On Render: New → Blueprint → connect this repo
+#   3. Render reads this file and creates all three resources below
+#      automatically (web service + Postgres + Redis)
+#
+# Docs: https://render.com/docs/blueprint-spec
+#
+# What this provisions:
+#   - adaptive-learning-api  : the Django web service (gunicorn)
+#   - adaptive-learning-db   : managed PostgreSQL database
+#   - adaptive-learning-redis: managed Redis instance (cache / celery broker)
+#
+# Environment variables marked "sync: false" must be set manually in the
+# Render dashboard after the first deploy (secrets should never live in
+# this file, which is committed to git).
+# ─────────────────────────────────────────────────────────────────────────────
+
+databases:
+  - name: adaptive-learning-db
+    plan: free                       # upgrade to "starter" or higher for production traffic
+    databaseName: adaptive_learning
+    user: adaptive_learning_user
+    region: oregon                   # change to match your users' location
+
+services:
+  # ── Redis (cache + celery broker) ───────────────────────────────────────────
+  - type: redis
+    name: adaptive-learning-redis
+    plan: free                       # Render's free Redis has no persistence —
+                                      # fine for cache/celery broker use, not
+                                      # for data you can't afford to lose
+    region: oregon
+    ipAllowList: []                  # empty = only accessible from other Render services
+
+  # ── Web service (Django + gunicorn) ─────────────────────────────────────────
+  - type: web
+    name: adaptive-learning-api
+    runtime: python
+    region: oregon
+    plan: free                       # upgrade for production (free tier sleeps after inactivity)
+    branch: main                     # change if your default branch is different
+
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+
+    healthCheckPath: /api/health/
+
+    envVars:
+      # ── Core Django ───────────────────────────────────────────────────────
+      - key: DJANGO_SECRET_KEY
+        generateValue: true          # Render auto-generates a strong random secret
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"       # allows the auto-assigned onrender.com subdomain
+      - key: DJANGO_LOG_LEVEL
+        value: INFO
+
+      # ── Database (auto-wired from the database block above) ────────────────
+      - key: DATABASE_URL
+        fromDatabase:
+          name: adaptive-learning-db
+          property: connectionString
+
+      # ── Redis (auto-wired from the redis service above) ─────────────────────
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: adaptive-learning-redis
+          property: connectionString
+
+      # ── CORS — set this manually once you know your frontend's URL ──────────
+      # Example: https://adaptive-learning-frontend.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      # ── Python version pin ───────────────────────────────────────────────────
+      - key: PYTHON_VERSION
+        value: "3.11.8"
+
+    autoDeploy: true                 # redeploy automatically on every push to `branch`
