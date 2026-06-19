@@ -43,7 +43,7 @@ services:
     runtime: python
     region: oregon
     plan: free                       # upgrade for production (free tier sleeps after inactivity)
-    branch: main                     # change if your default branch is different
+    branch: master                     # change if your default branch is different
 
     buildCommand: "./build.sh"
     startCommand: "gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
