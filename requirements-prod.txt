@@ -1,0 +1,69 @@
+# requirements-prod.txt
+# ─────────────────────────────────────────────────────────────────────────────
+# Minimal runtime dependencies for the DEPLOYED WEB SERVER ONLY.
+#
+# This is intentionally a small subset of requirements.txt — the full
+# file also includes training-only packages (mlflow, optuna, wandb,
+# stable-baselines3, seaborn, plotly, pytest, black) that the live API
+# never imports. Installing those in production wastes build time,
+# image size, and attack surface for no benefit.
+#
+# Use this file for:
+#   - Docker production image (see Dockerfile)
+#   - Render / Railway / any PaaS build step
+#   - Any environment that only serves the API + runs PPO inference
+#
+# Use the full requirements.txt for:
+#   - Local development
+#   - Training (train_kt.py, train_ppo.py)
+#   - Evaluation / analysis scripts (evaluate.py, ablation.py, learning_gain.py)
+#
+# Install with:
+#     pip install -r requirements-prod.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+# ── ML inference (PPO policy forward pass only — no training) ────────────────
+
+# Plain PyPI torch (CPU+CUDA bundled wheel). This is the safest default
+# for portability across PaaS providers — some build environments don't
+# reliably reach download.pytorch.org's custom package index, and the
+# extra-index-url syntax for the slimmer +cpu-only wheel is finicky across
+# pip versions and platforms. The bundled wheel is larger (~750MB vs
+# ~190MB) but installs everywhere with zero extra configuration.
+#
+# If your platform's build step DOES reach download.pytorch.org and you
+# want the smaller image, replace the line below with:
+#     --extra-index-url https://download.pytorch.org/whl/cpu
+#     torch==2.2.0+cpu
+# and test the build once before relying on it in production.
+torch==2.2.0
+
+numpy==1.26.3
+
+
+# ── Django web framework ──────────────────────────────────────────────────────
+
+django==5.0.2
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+python-dotenv==1.0.1
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+psycopg2-binary==2.9.9          # PostgreSQL driver (Render/Railway/RDS use Postgres)
+
+
+# ── Cache / task queue ─────────────────────────────────────────────────────────
+
+redis==5.0.1
+celery==5.3.6
+
+
+# ── Production server ──────────────────────────────────────────────────────────
+
+gunicorn==21.2.0                # production WSGI server
+whitenoise==6.6.0                # serves static files directly from Django
+                                  # (no separate nginx needed for static assets
+                                  #  on simple PaaS deployments like Render)
