@@ -92,6 +92,14 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
+
+    # WhiteNoise must come immediately after SecurityMiddleware and
+    # before every other middleware — this is WhiteNoise's documented
+    # required position. It serves STATIC_ROOT files directly from
+    # Django so simple PaaS deployments (Render, Railway) don't need a
+    # separate nginx process just for static assets.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -323,6 +331,18 @@ USE_TZ        = True          # all datetimes stored as UTC
 STATIC_URL  = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"   # collectstatic writes here
 
+# WhiteNoise compressed storage: collectstatic also generates .gz files
+# and a manifest with cache-busting hashed filenames, so static assets
+# can be served with far-future cache headers safely.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 MEDIA_URL   = "/media/"
 MEDIA_ROOT  = BASE_DIR / "media"
 
@@ -403,10 +423,29 @@ LOGGING = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 if not DEBUG:
+    # Render (and most PaaS providers) terminate TLS at their edge proxy
+    # and forward plain HTTP to this container, setting X-Forwarded-Proto
+    # to tell us the original request was HTTPS. Without this setting,
+    # Django can't distinguish real HTTPS browser traffic from the
+    # platform's own internal HTTP health checker — and SECURE_SSL_REDIRECT
+    # would force-redirect the health checker too, causing Render to mark
+    # every deploy as unhealthy and roll it back.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
     SECURE_HSTS_SECONDS            = 31_536_000   # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD            = True
     SECURE_SSL_REDIRECT            = True
+
+    # Render's own internal health checker (healthCheckPath in render.yaml)
+    # hits this container directly over plain HTTP, bypassing the HTTPS
+    # edge proxy entirely — so it never sends X-Forwarded-Proto and would
+    # otherwise be redirected by SECURE_SSL_REDIRECT above, which Render
+    # interprets as a failed health check and rolls the deploy back.
+    # Exempting this one path keeps the redirect active for all real
+    # browser traffic while letting the platform's own probe succeed.
+    SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
+
     SESSION_COOKIE_SECURE          = True
     CSRF_COOKIE_SECURE             = True
     SECURE_BROWSER_XSS_FILTER      = True
